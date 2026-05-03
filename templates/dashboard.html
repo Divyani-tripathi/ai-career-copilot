@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Welcome, {{ user }} 👋</h2>
+
+<!-- FORM -->
+<div class="card">
+    <h3>📄 Resume Analyzer</h3>
+
+    <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+
+        <label>Paste Resume (Optional)</label>
+        <textarea name="resume" placeholder="Paste your resume here...">{{ resume_text or "" }}</textarea>
+
+        <p style="text-align:center;">OR</p>
+
+        <input type="file" name="file">
+
+        <label>Target Role</label>
+        <input name="role" placeholder="e.g Backend Developer" value="{{ user_goal or '' }}" required>
+
+        <button type="submit">Analyze Resume</button>
+    </form>
+
+    <p id="loading" style="display:none; color:blue;">
+        ⏳ Analyzing your resume...
+    </p>
+</div>
+
+<!-- USER INPUT -->
+{% if result %}
+<div class="card">
+    <h3>📌 Your Input</h3>
+
+    {% if filename %}
+        <p><strong>Uploaded File:</strong> {{ filename }}</p>
+    {% endif %}
+
+    {% if user_goal %}
+        <p><strong>Target Role:</strong> {{ user_goal }}</p>
+    {% endif %}
+
+    {% if resume_text %}
+        <details>
+            <summary>📄 View Resume Content</summary>
+            <pre style="white-space: pre-wrap;">{{ resume_text }}</pre>
+        </details>
+    {% endif %}
+
+    {% if file_url %}
+        <h4>📄 Resume Preview</h4>
+        <iframe src="{{ file_url }}" width="100%" height="400px"></iframe>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- RESULT -->
+{% if result %}
+<div class="card">
+
+    {% if result.error %}
+        <p style="color:red;">❌ {{ result.error }}</p>
+    {% else %}
+
+    <!-- RESUME SCORE -->
+    <h3>📊 Resume Score</h3>
+    <div style="background:#eee; border-radius:10px; overflow:hidden;">
+        <div style="width: {{ result.get('score', 0) }}%; background: green; color:white; padding:5px; text-align:center;">
+            {{ result.get("score", 0) }}%
+        </div>
+    </div>
+    <!-- VERDICT -->
+    <h3>📌 Verdict: {{ result.get("status", "Analyzing...") }}</h3>
+    <!-- ROLE MATCH -->
+    <h3>🎯 Role Match</h3>
+    <div style="background:#eee; border-radius:10px; overflow:hidden;">
+        <div style="width: {{ result.get('match_percentage', 0) }}%; background: blue; color:white; padding:5px; text-align:center;">
+            {{ result.get("match_percentage", 0) }}%
+        </div>
+    </div>
+
+    <!-- SKILLS -->
+    <h3>✅ Skills</h3>
+    <div class="tags">
+        {% for s in result.get("skills", []) %}
+            {% if s.name %}
+                <span class="tag">{{ s.name }} ({{ s.score }}%)</span>
+            {% else %}
+                <span class="tag">{{ s }}</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- CHART -->
+    {% if result.get("skills") %}
+        <h3>📊 Skill Chart</h3>
+        <canvas id="skillsChart"></canvas>
+
+        <script id="skills-data" type="application/json">
+            {{ result.get("skills") | tojson }}
+        </script>
+    {% endif %}
+
+    <!-- MISSING SKILLS -->
+    <h3>❌ Missing Skills</h3>
+    <div class="tags">
+        {% for s in result.get("missing_skills", []) %}
+            <span class="tag missing">{{ s }}</span>
+        {% endfor %}
+    </div>
+
+    <!-- ROADMAP -->
+    <h3>🗺️ Roadmap</h3>
+    <ul>
+        {% for s in result.get("roadmap", []) %}
+            <li>{{ s }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- INTERVIEW QUESTIONS -->
+    <h3>🎯 Interview Questions</h3>
+    <ul>
+        {% for s in result.get("interview_questions", []) %}
+            <li>{{ s }}</li>
+        {% endfor %}
+    </ul>
+
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- CHART JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+function showLoading() {
+    document.getElementById("loading").style.display = "block";
+}
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const dataElement = document.getElementById("skills-data");
+    if (!dataElement) return;
+
+    const skills = JSON.parse(dataElement.textContent);
+
+    const topSkills = skills
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+
+    const labels = topSkills.map(s => s.name);
+    const scores = topSkills.map(s => s.score);
+    const canvas = document.getElementById("skillsChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Skill Strength",
+                data: scores,
+                backgroundColor: scores.map(score => 
+                    score > 75 ? "#4CAF50" : 
+                    score > 50 ? "#FFC107" : 
+                    "#F44336"
+                )
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 30
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+});
+</script>
+
+{% endblock %}

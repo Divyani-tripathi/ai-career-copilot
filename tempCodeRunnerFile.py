@@ -1,0 +1,1 @@
+mysql+mysqldb://4BXvMxYydEeTpuw.root:ZEC2zUfNh2NP3hNK@gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com:4000/test?ssl_mode=VERIFY_IDENTITY&ssl_ca=<CA_PATH>
