@@ -13,6 +13,7 @@ client = genai.Client(api_key=API_KEY)
 
 
 def analyze_resume(resume_text, user_goal):
+    resume_text = resume_text[:3000]
     if not resume_text:
         return {"error": "Resume text is empty"}
 
@@ -49,11 +50,15 @@ Format:
 Resume:
 {resume_text}
 """
+    print("Sending request to Gemini...")
     try:
         response = client.models.generate_content(
             model="models/gemini-2.5-flash",
             contents=prompt
-        )
+    )
+
+        if not response or not response.text:
+            return {"error": "Empty response from AI"}
 
         content = response.text.strip()
 
@@ -68,7 +73,10 @@ Resume:
         try:
             parsed = json.loads(json_str)
         except Exception as e:
-            return {"error": f"JSON Parse Error: {str(e)}"}
+            return {
+                "error": f"JSON Parse Error",
+                "raw_output": content[:500]
+            }
 
         
         if parsed.get("skills"):
