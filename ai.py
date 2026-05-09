@@ -15,7 +15,7 @@ client = genai.Client(api_key=API_KEY)
 
 def analyze_resume(resume_text, user_goal):
 
-    resume_text = resume_text[:800]
+    resume_text = resume_text[:400]
 
     if not resume_text:
         return {"error": "Resume text is empty"}
@@ -38,11 +38,12 @@ skills (with score), missing_skills, roadmap, interview_questions
     response = None
 
     # Retry 3 times
+    response = None
     for attempt in range(3):
 
         try:
             response = client.models.generate_content(
-                model="models/gemini-1.5-flash",
+                model="gemini-1.5-flash",
                 contents=prompt
             )
 
@@ -51,12 +52,12 @@ skills (with score), missing_skills, roadmap, interview_questions
 
         except Exception as e:
             print(f"Attempt {attempt + 1} failed:", str(e))
-            time.sleep(2)
+            time.sleep(5)
 
     # If still failed
     if not response or not response.text:
         return {
-            "error": "🚨 AI server busy. Please try again later."
+            "error": "Gemini servers are busy. Please try again in 1 minute."
         }
 
     try:
