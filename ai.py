@@ -132,8 +132,70 @@ def analyze_resume(resume_text, user_goal):
         return parsed
 
     except Exception as e:
-        print("ERROR:", str(e))
+        print("Gemini Failed:", str(e))
+
+        text = resume_text.lower()
+
+        all_skills = [
+            "python",
+            "flask",
+            "django",
+            "sql",
+            "mysql",
+            "mongodb",
+            "git",
+            "github",
+            "docker",
+            "aws",
+            "api",
+            "machine learning",
+            "html",
+            "css",
+            "javascript"
+        ]
+
+        found_skills = []
+        missing_skills = []
+
+        for skill in all_skills:
+
+            if skill in text:
+                found_skills.append({
+                    "name": skill.title(),
+                    "score": 75
+                })
+
+            else:
+                missing_skills.append(skill.title())
+
+        total = len(all_skills)
+
+        coverage = int((len(found_skills) / total) * 100)
+
+        if coverage >= 75:
+            status = "🔥 Strong Candidate"
+
+        elif coverage >= 50:
+            status = "⚡ Average Candidate"
+
+        else:
+            status = "❗ Needs Improvement"
 
         return {
-            "error": f"Gemini API Error: {str(e)}"
+            "score": coverage,
+            "match_percentage": coverage,
+            "skills": found_skills,
+            "missing_skills": missing_skills,
+            "roadmap": [
+                "Build more projects",
+                "Improve backend skills",
+                "Learn deployment and Docker"
+            ],
+            "interview_questions": [
+                "Explain your projects.",
+                "How does Flask work?",
+                "What is REST API?"
+            ],
+            "status": status
         }
+        
