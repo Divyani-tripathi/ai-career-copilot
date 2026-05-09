@@ -24,14 +24,19 @@ def analyze_resume(resume_text, user_goal):
         return {"error": "User goal is missing"}
 
     prompt = f"""
-Analyze this resume for {user_goal} role.
+        Analyze resume for {user_goal} role.
 
-Resume:
-{resume_text}
+        Resume:
+        {resume_text}
 
-Return ONLY valid JSON with:
-skills (with score), missing_skills, roadmap, interview_questions
-"""
+        Return ONLY JSON:
+        {{
+        "skills": [],
+        "missing_skills": [],
+        "roadmap": [],
+        "interview_questions": []
+        }}
+        """
 
     print("Sending request to Gemini...")
 
@@ -43,9 +48,9 @@ skills (with score), missing_skills, roadmap, interview_questions
 
         try:
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=prompt
-            )
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
 
             if response and response.text:
                 break
